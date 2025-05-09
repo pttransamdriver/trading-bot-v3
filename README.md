@@ -1,32 +1,30 @@
-# Flash Loan Arbitrage Monitor
+# Flash Loan Arbitrage Bot
 
-An automated system for monitoring and executing flash loan arbitrage opportunities across multiple DEXs on Ethereum. The system continuously monitors price differences between various token pairs, executing trades when profitable opportunities are found.
+An optimized system for monitoring and executing flash loan arbitrage opportunities across multiple DEXs on Ethereum. The system continuously monitors price differences between various token pairs, executing trades when profitable opportunities are found, with advanced profit calculation and dynamic slippage protection.
 
 ## Features
 
 - Real-time monitoring of token price differences across multiple DEXs
 - Automated flash loan execution for profitable trades
-- Built-in safety checks for:
-  - Minimum profit threshold
-  - Gas price limits
-  - Price impact
-  - Pool liquidity
-  - Slippage protection
+- Advanced profit calculation accounting for:
+  - Flash loan fees (0.09% for Aave)
+  - DEX trading fees
+  - Gas costs with priority fees
+  - Safety margin for market fluctuations
+- Dynamic slippage protection (0.5-3%) based on trade profitability
+- Priority-based token pair scanning:
+  - Stablecoins (USDC, USDT, DAI)
+  - Major assets (WETH, WBTC)
+  - High volatility tokens (LINK, UNI, AAVE, MKR, SNX)
 - Supports multiple DEXs:
-  - Uniswap
+  - Uniswap V3 & V2
+  - Sushiswap
   - Curve
   - Balancer
-  - ShibaSwap
-  - QuickSwap
   - PancakeSwap
-- Monitors multiple token pairs including:
-  - WETH
-  - DAI
-  - POL
-  - ARB
-  - WBTC
-  - BNB
-  - CRV
+  - 1inch
+- Proper pool liquidity verification
+- Gas optimization with priority fees for faster inclusion
 
 ## Prerequisites
 
@@ -85,25 +83,27 @@ You can adjust these parameters in `monitor.js`:
 npx hardhat run scripts/deploy.js --network mainnet
 ```
 
-2. Update the Flash Loan contract address in `monitor.js`:
-```javascript
-const arbitrage = await ethers.getContractAt(
-  "FlashLoanArbitrage",
-  "YOUR_DEPLOYED_CONTRACT_ADDRESS",
-  signer
-);
+2. Update the `.env` file with your deployed contract address:
+```
+FLASH_LOAN_CONTRACT=your_deployed_contract_address
 ```
 
-3. Start the monitoring system:
+3. Run the test suite to verify contract functionality:
+```bash
+npx hardhat test
+```
+
+4. Start the monitoring system:
 ```bash
 npx hardhat run scripts/monitor.js --network mainnet
 ```
 
 The system will continuously:
-1. Monitor prices across different DEXs
-2. Check for profitable arbitrage opportunities
-3. Execute flash loan trades when profitable opportunities are found
-4. Log all activities and transactions
+1. Monitor prices across different DEXs with priority-based token pair scanning
+2. Calculate potential profits accounting for all fees and costs
+3. Apply dynamic slippage protection based on trade profitability
+4. Execute flash loan trades when profitable opportunities are found
+5. Log detailed information about profits, costs, and execution status
 
 ## Safety Features
 
