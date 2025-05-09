@@ -19,7 +19,7 @@ interface ILendingPool {
 contract FlashLoanArbitrage is Ownable {
     // Address of the lending pool that will provide the flash loan
     address public immutable LENDING_POOL;
-    
+
     constructor(address lendingPoolAddress) {
         _transferOwnership(msg.sender);
         LENDING_POOL = lendingPoolAddress;
@@ -49,8 +49,9 @@ contract FlashLoanArbitrage is Ownable {
             address secondDexRouter,
             address tokenToBorrow,  // unused but needed for decoding
             address tokenToTradeFor,
-            uint24 dexTradingFee
-        ) = abi.decode(arbitrageParams, (address, address, address, address, uint24));
+            uint24 dexTradingFee,
+            uint256 slippagePercentage
+        ) = abi.decode(arbitrageParams, (address, address, address, address, uint24, uint256));
 
         // Step 1: Approve the first DEX to spend our borrowed tokens
         IERC20(borrowedToken).approve(firstDexRouter, borrowedAmount);
@@ -64,7 +65,7 @@ contract FlashLoanArbitrage is Ownable {
                 recipient: address(this),
                 deadline: block.timestamp,
                 amountIn: borrowedAmount,
-                amountOutMinimum: 0, // Note: In production, should include slippage protection
+                amountOutMinimum: borrowedAmount * (100 - slippagePercentage) / 100, // Dynamic slippage protection
                 sqrtPriceLimitX96: 0
             })
         );
@@ -114,15 +115,20 @@ contract FlashLoanArbitrage is Ownable {
         address secondDexRouter,
         address tokenToBorrow,
         address tokenToTradeFor,
-        uint24 dexTradingFee
+        uint24 dexTradingFee,
+        uint256 slippagePercentage
     ) external onlyOwner {
+        // Validate slippage parameter (must be between 0 and 10%)
+        require(slippagePercentage <= 10, "Slippage too high");
+
         // Encode parameters for the flash loan callback
         bytes memory arbitrageParams = abi.encode(
             firstDexRouter,
             secondDexRouter,
             tokenToBorrow,
             tokenToTradeFor,
-            dexTradingFee
+            dexTradingFee,
+            slippagePercentage
         );
 
         // Request the flash loan from the lending pool
